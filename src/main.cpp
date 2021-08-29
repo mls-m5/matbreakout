@@ -1,6 +1,6 @@
 
 
-#include "SDL2/SDL_keycode.h"
+#include "controls.h"
 #include "matmath/vec2.h"
 #include "sdlpp/events.hpp"
 #include "sdlpp/render.hpp"
@@ -8,56 +8,6 @@
 #include <array>
 #include <iostream>
 #include <vector>
-
-struct Controls {
-    Vec2 movement;
-
-    enum CN {
-        None,
-        Left,
-        Right,
-        Count,
-    };
-
-    std::vector<std::pair<CN, int>> controlMap = {
-        {Left, SDL_SCANCODE_LEFT},
-        {Right, SDL_SCANCODE_RIGHT},
-    };
-
-    std::array<int, Count> state;
-
-    auto get(CN c) {
-        return state.at(c);
-    }
-
-    auto scancodeToControl(const SDL_Event &event) {
-        for (auto c : controlMap) {
-            if (c.second == event.key.keysym.scancode) {
-                return c.first;
-            }
-        }
-
-        return None;
-    }
-
-    void handleEvent(SDL_Event &event) {
-
-        switch (event.type) {
-        case SDL_KEYDOWN: {
-            auto control = scancodeToControl(event);
-            state.at(control) = 1;
-            break;
-        }
-        case SDL_KEYUP: {
-            auto control = scancodeToControl(event);
-            state.at(control) = 0;
-            break;
-        }
-        default:
-            return;
-        }
-    }
-};
 
 int main(int argc, char **argv) {
     std::cout << "hello from " << argv[0] << std::endl;
@@ -69,7 +19,8 @@ int main(int argc, char **argv) {
                               300,
                               SDL_WINDOW_SHOWN};
 
-    auto renderer = sdl::Renderer{window, -1, SDL_RENDERER_ACCELERATED};
+    auto renderer = sdl::Renderer{
+        window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC};
 
     bool running = true;
 
@@ -89,6 +40,9 @@ int main(int argc, char **argv) {
         axis.x = -controls.get(Controls::Left) + controls.get(Controls::Right);
 
         pos += axis;
+
+        renderer.setDrawColor(0, 30, 0, 255);
+        renderer.fillRect();
 
         renderer.setDrawColor(100, 100, 100, 255);
         renderer.drawLine(0, 0, 100, 100);

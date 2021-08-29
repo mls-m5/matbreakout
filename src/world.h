@@ -4,7 +4,9 @@
 #include "matmath/vec2.h"
 
 struct World {
-    enum EventNum { HitBar };
+    enum EventNum {
+        HitBar,
+    };
 
     struct Event {
         EventNum num;
@@ -18,12 +20,21 @@ struct World {
 
     virtual ~World() = default;
 
-    virtual void addParticle(Vec2f p, Vec2f v = {}) = 0;
+    virtual struct Particle &addParticle(Vec2f p, Vec2f v = {}) = 0;
     virtual bool isInsideBar(Vec2f p) = 0;
     virtual void triggerEvent(Event event) = 0;
 
     // Test ball collision with bricks
     virtual struct Collision collide(Vec2f p, Vec2f size) = 0;
 
-    void destroyBrick(const struct Brick &);
+    struct ExplosionInfo {
+        Vec2f vel;
+        float spread = 1;
+        float power = 10;
+        int numParticles = 100;
+    };
+
+    virtual void explosion(Vec2f pos, ExplosionInfo) = 0;
+
+    virtual float barAmount(Vec2f p) = 0;
 };

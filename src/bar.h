@@ -30,4 +30,13 @@ struct Bar {
 
         return true;
     }
+
+    auto halfWidth() {
+        return size.x / 2.;
+    }
+
+    //! Amount -1 to 1 for where on the bar the ball hit
+    float amount(Vec2f p) {
+        return (p.x - pos.x) / halfWidth();
+    }
 };

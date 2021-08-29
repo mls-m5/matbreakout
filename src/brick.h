@@ -51,25 +51,27 @@ struct Brick {
     }
 
     //! Only use if collision is already verified
-    auto getCollisionPart(Vec2f pos) {
-        auto part = BrickPart::Bottom;
-        auto nearest = std::abs(pos.y + halfHeight());
+    auto getCollisionPart(Vec2f p) {
+        auto part = BrickPart::Top;
+        auto nearest = std::abs(p.y - pos.y + halfHeight());
 
-        if (auto nnearest = std::abs(pos.y - halfHeight());
+        if (auto nnearest = std::abs(p.y - pos.y - halfHeight());
             nnearest < nearest) {
             nnearest = nearest;
 
-            part = BrickPart::Top;
+            part = BrickPart::Bottom;
         }
 
-        if (auto nnearest = std::abs(pos.x - halfWidth()); nnearest < nearest) {
-            nnearest = nearest;
-            part = BrickPart::Left;
-        }
-
-        if (auto nnearest = std::abs(pos.x + halfWidth()); nnearest < nearest) {
+        if (auto nnearest = std::abs(p.x - pos.x - halfWidth());
+            nnearest < nearest) {
             nnearest = nearest;
             part = BrickPart::Right;
+        }
+
+        if (auto nnearest = std::abs(p.x - pos.x + halfWidth());
+            nnearest < nearest) {
+            nnearest = nearest;
+            part = BrickPart::Left;
         }
 
         return part;
@@ -108,9 +110,9 @@ BrickPart findPart(Vec2f normal) {
 Vec2f toNormal(BrickPart part) {
     switch (part) {
     case BrickPart::Bottom:
-        return {0, -1};
-    case BrickPart::Top:
         return {0, 1};
+    case BrickPart::Top:
+        return {0, -1};
     case BrickPart::Left:
         return {-1, 0};
     case BrickPart::Right:

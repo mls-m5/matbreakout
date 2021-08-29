@@ -39,6 +39,8 @@ struct Ball {
             dir.y = -std::abs(dir.y);
 
             world.triggerEvent({World::HitBar, pos});
+
+            dir.x = world.barAmount(pos) * std::abs(dir.y);
         }
 
         world.addParticle(pos);
@@ -52,6 +54,14 @@ struct Ball {
             else {
                 dir.x *= -1;
             }
+
+            auto ex = World::ExplosionInfo{};
+
+            ex.power = 1;
+            ex.spread = 4;
+            ex.vel = c.normal * .5;
+
+            world.explosion(pos, ex);
         }
     }
 };

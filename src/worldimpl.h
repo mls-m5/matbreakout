@@ -21,9 +21,11 @@ struct WorldImpl : public World {
 
         balls.emplace_back();
 
+        int maxX = width / Brick::brickSize.x;
+
         for (int y = 0; y < 10; ++y) {
-            for (int x = 0; x < 10; ++x) {
-                bricks.push_back({Vec2f{x * Brick::brickSize.x,
+            for (int x = 0; x < maxX; ++x) {
+                bricks.push_back({Vec2f{(x + .5f) * Brick::brickSize.x,
                                         y * Brick::brickSize.y + 40}});
             }
         }
@@ -64,8 +66,9 @@ struct WorldImpl : public World {
         }
     }
 
-    void addParticle(Vec2f p, Vec2f v) override {
+    Particle &addParticle(Vec2f p, Vec2f v) override {
         particles.particles.push_back({p.x, p.y, v.x, v.y});
+        return particles.particles.back();
     }
 
     bool isInsideBar(Vec2f p) override {
@@ -97,5 +100,26 @@ struct WorldImpl : public World {
         }
 
         return {};
+    }
+
+    void explosion(Vec2f pos, ExplosionInfo info) override {
+        for (int i = 0; i < info.numParticles; ++i) {
+            auto &p = addParticle(
+                pos,
+                {(static_cast<float>(rand()) / static_cast<float>(RAND_MAX) -
+                  .5f) *
+                     info.power,
+                 (static_cast<float>(rand()) / static_cast<float>(RAND_MAX) -
+                  .5f) *
+                     info.power});
+
+            p.spread = info.spread;
+            p.vx = info.vel.x;
+            p.vy = info.vel.y;
+        }
+    }
+
+    float barAmount(Vec2f p) override {
+        return bar.amount(p);
     }
 };

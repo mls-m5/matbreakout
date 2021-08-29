@@ -45,6 +45,13 @@ struct Ball {
 
         if (auto c = world.collide(pos, size)) {
             c.brick->dead = true;
+
+            if (std::abs(c.normal.y) > std::abs(c.normal.x)) {
+                dir.y *= -1;
+            }
+            else {
+                dir.x *= -1;
+            }
         }
     }
 };

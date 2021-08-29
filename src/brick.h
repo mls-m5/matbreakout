@@ -3,6 +3,13 @@
 #include "matmath/vec2.h"
 #include "sdlpp/render.hpp"
 
+enum class BrickPart {
+    Top,
+    Bottom,
+    Left,
+    Right,
+};
+
 struct Brick {
     static constexpr Vec2f brickSize = {20, 10};
 
@@ -20,28 +27,93 @@ struct Brick {
     }
 
     bool isInside(Vec2f p, Vec2f s) {
-        if (p.x + s.x > pos.x + size.x) {
+        if (p.x + s.x > pos.x + halfWidth()) {
             return false;
         }
-        if (p.x - s.x < pos.x - size.x) {
+        if (p.x - s.x < pos.x - halfWidth()) {
             return false;
         }
-        if (p.y + s.y > pos.y + size.y) {
+        if (p.y + s.y > pos.y + halfHeight()) {
             return false;
         }
-        if (p.y - s.y < pos.y - size.y) {
+        if (p.y - s.y < pos.y - halfHeight()) {
             return false;
         }
         return true;
     }
+
+    float halfWidth() {
+        return size.x / 2.f;
+    }
+
+    float halfHeight() {
+        return size.y / 2.f;
+    }
+
+    //! Only use if collision is already verified
+    auto getCollisionPart(Vec2f pos) {
+        auto part = BrickPart::Bottom;
+        auto nearest = std::abs(pos.y + halfHeight());
+
+        if (auto nnearest = std::abs(pos.y - halfHeight());
+            nnearest < nearest) {
+            nnearest = nearest;
+
+            part = BrickPart::Top;
+        }
+
+        if (auto nnearest = std::abs(pos.x - halfWidth()); nnearest < nearest) {
+            nnearest = nearest;
+            part = BrickPart::Left;
+        }
+
+        if (auto nnearest = std::abs(pos.x + halfWidth()); nnearest < nearest) {
+            nnearest = nearest;
+            part = BrickPart::Right;
+        }
+
+        return part;
+    }
 };
 
 struct Collision {
-    Vec2f normal;
     bool isCollision = false;
     Brick *brick = nullptr;
+    Vec2f normal;
 
     operator bool() {
         return isCollision;
     }
 };
+
+BrickPart findPart(Vec2f normal) {
+    if (std::abs(normal.x) > std::abs(normal.y)) {
+        if (normal.x > 0) {
+            return BrickPart::Right;
+        }
+        else {
+            return BrickPart::Left;
+        }
+    }
+    else {
+        if (normal.y > 0) {
+            return BrickPart::Bottom;
+        }
+        else {
+            return BrickPart::Top;
+        }
+    }
+}
+
+Vec2f toNormal(BrickPart part) {
+    switch (part) {
+    case BrickPart::Bottom:
+        return {0, -1};
+    case BrickPart::Top:
+        return {0, 1};
+    case BrickPart::Left:
+        return {-1, 0};
+    case BrickPart::Right:
+        return {1, 0};
+    }
+}

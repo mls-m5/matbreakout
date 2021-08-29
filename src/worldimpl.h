@@ -87,10 +87,11 @@ struct WorldImpl : public World {
     Collision collide(Vec2f p, Vec2f size) override {
         for (auto &b : bricks) {
             if (b.isInside(p, size)) {
+                auto normal = toNormal(b.getCollisionPart(p));
                 return {
-                    .normal = {},
                     .isCollision = true,
                     .brick = &b,
+                    .normal = normal,
                 };
             }
         }

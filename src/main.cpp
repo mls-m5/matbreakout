@@ -54,8 +54,8 @@ struct Particles {
 };
 
 struct World {
-    double width;
-    double height;
+    float width;
+    float height;
 
     Controls controls;
     Particles particles;
@@ -63,11 +63,12 @@ struct World {
     virtual ~World() = default;
 
     virtual void addParticle(Vec2f p) = 0;
+    virtual bool isInsideBar(Vec2f p) = 0;
 };
 
 struct Bar {
-    Vec2 size{60, 20};
-    Vec2 pos{20, 30};
+    Vec2f size{60, 4};
+    Vec2f pos{20, 30};
 
     void draw(sdl::Renderer &renderer) {
         renderer.setDrawColor(100, 100, 100, 255);
@@ -76,20 +77,36 @@ struct Bar {
                            static_cast<int>(size.x),
                            static_cast<int>(size.y)});
     }
+
+    bool isInside(Vec2f p) {
+        if (p.x < pos.x - size.x / 2.) {
+            return false;
+        }
+
+        if (p.x > pos.x + size.x / 2.) {
+            return false;
+        }
+
+        if (p.y < pos.y) {
+            return false;
+        }
+
+        return true;
+    }
 };
 
 struct Ball {
-    Vec2f size{20, 20};
+    Vec2f size{2, 2};
     Vec2f pos{20, 30};
 
     Vec2f dir{1, 1};
 
     void draw(sdl::Renderer &renderer) {
-        //        renderer.setDrawColor(200, 200, 200, 255);
-        //        renderer.fillRect({static_cast<int>(pos.x - size.x / 2.),
-        //                           static_cast<int>(pos.y - size.y / 2.),
-        //                           static_cast<int>(size.x),
-        //                           static_cast<int>(size.y)});
+        renderer.setDrawColor(200, 200, 200, 255);
+        renderer.fillRect({static_cast<int>(pos.x - size.x / 2.),
+                           static_cast<int>(pos.y - size.y / 2.),
+                           static_cast<int>(size.x),
+                           static_cast<int>(size.y)});
     }
 
     void update(World &world) {
@@ -107,6 +124,12 @@ struct Ball {
         }
         else if (pos.y > world.height) {
             dir.y = -std::abs(dir.y);
+        }
+
+        if (dir.y > 0 && world.isInsideBar(pos)) {
+            dir.y = -std::abs(dir.y);
+
+            // Some event
         }
 
         world.addParticle(pos);
@@ -128,7 +151,7 @@ struct WorldImpl : public World {
     }
 
     void update(World &world) {
-        auto axis = Vec2{};
+        auto axis = Vec2f{};
         auto &controls = world.controls;
 
         for (auto &b : balls) {
@@ -141,7 +164,7 @@ struct WorldImpl : public World {
 
         bar.pos += axis * 10;
 
-        bar.pos.x = std::min(std::max(0., bar.pos.x), width);
+        bar.pos.x = std::min(std::max(0.f, bar.pos.x), width);
     }
 
     void draw(sdl::Renderer &renderer) {
@@ -155,6 +178,10 @@ struct WorldImpl : public World {
 
     void addParticle(Vec2f p) override {
         particles.particles.push_back({p.x, p.y});
+    }
+
+    bool isInsideBar(Vec2f p) override {
+        return bar.isInside(p);
     }
 };
 

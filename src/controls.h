@@ -19,7 +19,7 @@ struct Controls {
         {Right, SDL_SCANCODE_RIGHT},
     };
 
-    std::array<int, Count> state;
+    std::array<int, Count> state = {};
 
     auto get(CN c) {
         return state.at(c);

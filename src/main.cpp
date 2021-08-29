@@ -1,10 +1,12 @@
 
 
+#include "SDL2/SDL_opengl.h"
 #include "controls.h"
 #include "matmath/vec2.h"
 #include "sdlpp/events.hpp"
 #include "sdlpp/render.hpp"
 #include "sdlpp/window.hpp"
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <vector>
@@ -13,11 +15,15 @@ double t = 1. / 60.;
 
 struct Particle {
     float x, y;
-    float duration = 1;
+    float duration = 5;
+    float maxDuration = 5;
     char r = '\255', g = '\255', b = '\255', dead = 0;
 
     void update() {
         duration -= t;
+        x += static_cast<double>(rand()) / RAND_MAX - .5;
+        y += static_cast<double>(rand()) / RAND_MAX - .5;
+        dead = duration < 0;
     }
 };
 
@@ -33,8 +39,17 @@ struct Particles {
     void draw(sdl::Renderer &renderer) {
         // Prabably really bad performance here
         for (auto &p : particles) {
+            auto alpha = static_cast<int>(p.duration / p.maxDuration * 255.);
+
+            renderer.setDrawColor(p.r, p.g, p.b, alpha);
+            //            renderer.setDrawColor(alpha, alpha, alpha, alpha);
             renderer.drawPointF(p);
         }
+
+        auto it = std::remove_if(
+            particles.begin(), particles.end(), [](auto &p) { return p.dead; });
+
+        particles.erase(it, particles.end());
     }
 };
 
@@ -46,6 +61,8 @@ struct World {
     Particles particles;
 
     virtual ~World() = default;
+
+    virtual void addParticle(Vec2f p) = 0;
 };
 
 struct Bar {
@@ -62,17 +79,17 @@ struct Bar {
 };
 
 struct Ball {
-    Vec2 size{20, 20};
-    Vec2 pos{20, 30};
+    Vec2f size{20, 20};
+    Vec2f pos{20, 30};
 
-    Vec2 dir{1, 1};
+    Vec2f dir{1, 1};
 
     void draw(sdl::Renderer &renderer) {
-        renderer.setDrawColor(200, 200, 200, 255);
-        renderer.fillRect({static_cast<int>(pos.x - size.x / 2.),
-                           static_cast<int>(pos.y - size.y / 2.),
-                           static_cast<int>(size.x),
-                           static_cast<int>(size.y)});
+        //        renderer.setDrawColor(200, 200, 200, 255);
+        //        renderer.fillRect({static_cast<int>(pos.x - size.x / 2.),
+        //                           static_cast<int>(pos.y - size.y / 2.),
+        //                           static_cast<int>(size.x),
+        //                           static_cast<int>(size.y)});
     }
 
     void update(World &world) {
@@ -91,12 +108,15 @@ struct Ball {
         else if (pos.y > world.height) {
             dir.y = -std::abs(dir.y);
         }
+
+        world.addParticle(pos);
     }
 };
 
 struct WorldImpl : public World {
     Bar bar;
     std::vector<Ball> balls;
+    Particles particles;
 
     WorldImpl(Vec2 worldSize) {
         width = worldSize.x;
@@ -125,11 +145,16 @@ struct WorldImpl : public World {
     }
 
     void draw(sdl::Renderer &renderer) {
+        particles.draw(renderer);
         for (auto &ball : balls) {
             ball.draw(renderer);
         }
 
         bar.draw(renderer);
+    }
+
+    void addParticle(Vec2f p) override {
+        particles.particles.push_back({p.x, p.y});
     }
 };
 
@@ -151,7 +176,11 @@ int main(int argc, char **argv) {
 
     bool running = true;
 
+    glEnable(GL_BLEND);
+
     auto world = WorldImpl{{width, height}};
+
+    renderer.drawBlendMode(SDL_BLENDMODE_BLEND);
 
     while (running) {
         while (auto event = sdl::pollEvents()) {

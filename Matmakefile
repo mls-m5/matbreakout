@@ -10,7 +10,7 @@ main
     Wall
   command = [exe]
   ldflags =
-    -lSDL2
+    -lSDL2 -lGL
 
 all
   in = @main

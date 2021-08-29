@@ -15,14 +15,18 @@ double t = 1. / 60.;
 
 struct Particle {
     float x, y;
-    float duration = 5;
-    float maxDuration = 5;
+    float vx = 0, vy = 0;
+    float duration = 2;
+    float maxDuration = 2;
+    float spread = 2;
     char r = '\255', g = '\255', b = '\255', dead = 0;
 
     void update() {
         duration -= t;
-        x += static_cast<double>(rand()) / RAND_MAX - .5;
-        y += static_cast<double>(rand()) / RAND_MAX - .5;
+        x += vx;
+        y += vy;
+        x += (static_cast<double>(rand()) / RAND_MAX - .5) * spread;
+        y += (static_cast<double>(rand()) / RAND_MAX - .5) * spread;
         dead = duration < 0;
     }
 };
@@ -34,6 +38,11 @@ struct Particles {
         for (auto &p : particles) {
             p.update();
         }
+
+        auto it = std::remove_if(
+            particles.begin(), particles.end(), [](auto &p) { return p.dead; });
+
+        particles.erase(it, particles.end());
     }
 
     void draw(sdl::Renderer &renderer) {
@@ -42,18 +51,20 @@ struct Particles {
             auto alpha = static_cast<int>(p.duration / p.maxDuration * 255.);
 
             renderer.setDrawColor(p.r, p.g, p.b, alpha);
-            //            renderer.setDrawColor(alpha, alpha, alpha, alpha);
             renderer.drawPointF(p);
         }
-
-        auto it = std::remove_if(
-            particles.begin(), particles.end(), [](auto &p) { return p.dead; });
-
-        particles.erase(it, particles.end());
     }
 };
 
 struct World {
+
+    enum EventNum { HitBar };
+
+    struct Event {
+        EventNum num;
+        Vec2f position;
+    };
+
     float width;
     float height;
 
@@ -62,8 +73,9 @@ struct World {
 
     virtual ~World() = default;
 
-    virtual void addParticle(Vec2f p) = 0;
+    virtual void addParticle(Vec2f p, Vec2f v = {}) = 0;
     virtual bool isInsideBar(Vec2f p) = 0;
+    virtual void triggerEvent(Event event) = 0;
 };
 
 struct Bar {
@@ -129,7 +141,7 @@ struct Ball {
         if (dir.y > 0 && world.isInsideBar(pos)) {
             dir.y = -std::abs(dir.y);
 
-            // Some event
+            world.triggerEvent({World::HitBar, pos});
         }
 
         world.addParticle(pos);
@@ -176,12 +188,24 @@ struct WorldImpl : public World {
         bar.draw(renderer);
     }
 
-    void addParticle(Vec2f p) override {
-        particles.particles.push_back({p.x, p.y});
+    void addParticle(Vec2f p, Vec2f v) override {
+        particles.particles.push_back({p.x, p.y, v.x, v.y});
     }
 
     bool isInsideBar(Vec2f p) override {
         return bar.isInside(p);
+    }
+
+    void triggerEvent(Event event) override {
+        if (event.num == World::HitBar) {
+            constexpr int num = 40;
+            for (int i = -num; i < num; ++i) {
+                addParticle(
+                    {bar.pos.x + static_cast<float>(i) / num * bar.size.x / 2.f,
+                     bar.pos.y},
+                    {0, -.1});
+            }
+        }
     }
 };
 

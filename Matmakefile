@@ -1,0 +1,22 @@
+
+# using matmake2: https://github.com/laserskold/matmake2
+
+main
+  out = main
+  src =
+    src/*.cpp
+  config =
+    c++17
+    Wall
+  command = [exe]
+  ldflags =
+    -lSDL2
+
+all
+  in = @main
+  includes =
+    include
+    lib/sdlpp/include
+    /usr/include/SDL2
+    lib/matmath/include
+

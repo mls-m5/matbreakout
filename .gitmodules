@@ -1,0 +1,6 @@
+[submodule "lib/sdlpp"]
+	path = lib/sdlpp
+	url = git@github.com:mls-m5/sdlpp.git
+[submodule "lib/matmath"]
+	path = lib/matmath
+	url = git@github.com:mls-m5/matmath.git

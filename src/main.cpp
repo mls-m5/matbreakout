@@ -57,7 +57,6 @@ struct Particles {
 };
 
 struct World {
-
     enum EventNum { HitBar };
 
     struct Event {
@@ -69,13 +68,60 @@ struct World {
     float height;
 
     Controls controls;
-    Particles particles;
 
     virtual ~World() = default;
 
     virtual void addParticle(Vec2f p, Vec2f v = {}) = 0;
     virtual bool isInsideBar(Vec2f p) = 0;
     virtual void triggerEvent(Event event) = 0;
+
+    // Test ball collision with bricks
+    virtual struct Collision collide(Vec2f p, Vec2f size) = 0;
+
+    void destroyBrick(const struct Brick &);
+};
+
+struct Brick {
+    static constexpr Vec2f brickSize = {20, 10};
+
+    Vec2f pos;
+    char r = rand() % 200, g = rand() % 200, b = rand() % 200;
+    Vec2f size = brickSize;
+    bool dead = false;
+
+    void draw(sdl::Renderer &renderer) {
+        renderer.setDrawColor(r, g, b, 255);
+        renderer.fillRect({static_cast<int>(pos.x - size.x / 2.),
+                           static_cast<int>(pos.y - size.y / 2.),
+                           static_cast<int>(size.x),
+                           static_cast<int>(size.y)});
+    }
+
+    bool isInside(Vec2f p, Vec2f s) {
+        if (p.x + s.x > pos.x + size.x) {
+            return false;
+        }
+        if (p.x - s.x < pos.x - size.x) {
+            return false;
+        }
+        if (p.y + s.y > pos.y + size.y) {
+            return false;
+        }
+        if (p.y - s.y < pos.y - size.y) {
+            return false;
+        }
+        return true;
+    }
+};
+
+struct Collision {
+    Vec2f normal;
+    bool isCollision = false;
+    Brick *brick = nullptr;
+
+    operator bool() {
+        return isCollision;
+    }
 };
 
 struct Bar {
@@ -145,6 +191,10 @@ struct Ball {
         }
 
         world.addParticle(pos);
+
+        if (auto c = world.collide(pos, size)) {
+            c.brick->dead = true;
+        }
     }
 };
 
@@ -152,6 +202,7 @@ struct WorldImpl : public World {
     Bar bar;
     std::vector<Ball> balls;
     Particles particles;
+    std::vector<Brick> bricks;
 
     WorldImpl(Vec2 worldSize) {
         width = worldSize.x;
@@ -160,6 +211,13 @@ struct WorldImpl : public World {
         bar.pos.y = height - bar.size.y * 2;
 
         balls.emplace_back();
+
+        for (int y = 0; y < 10; ++y) {
+            for (int x = 0; x < 10; ++x) {
+                bricks.push_back({Vec2f{x * Brick::brickSize.x,
+                                        y * Brick::brickSize.y + 40}});
+            }
+        }
     }
 
     void update(World &world) {
@@ -177,6 +235,11 @@ struct WorldImpl : public World {
         bar.pos += axis * 10;
 
         bar.pos.x = std::min(std::max(0.f, bar.pos.x), width);
+
+        auto it = std::remove_if(
+            bricks.begin(), bricks.end(), [](auto &b) { return b.dead; });
+
+        bricks.erase(it, bricks.end());
     }
 
     void draw(sdl::Renderer &renderer) {
@@ -186,6 +249,10 @@ struct WorldImpl : public World {
         }
 
         bar.draw(renderer);
+
+        for (auto &brick : bricks) {
+            brick.draw(renderer);
+        }
     }
 
     void addParticle(Vec2f p, Vec2f v) override {
@@ -206,6 +273,20 @@ struct WorldImpl : public World {
                     {0, -.1});
             }
         }
+    }
+
+    Collision collide(Vec2f p, Vec2f size) override {
+        for (auto &b : bricks) {
+            if (b.isInside(p, size)) {
+                return {
+                    .normal = {},
+                    .isCollision = true,
+                    .brick = &b,
+                };
+            }
+        }
+
+        return {};
     }
 };
 

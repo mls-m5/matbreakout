@@ -19,7 +19,7 @@ struct Brick {
     bool dead = false;
 
     void draw(sdl::Renderer &renderer) {
-        renderer.setDrawColor(r, g, b, 255);
+        renderer.drawColor(r, g, b, 255);
         renderer.fillRect({static_cast<int>(pos.x - size.x / 2.),
                            static_cast<int>(pos.y - size.y / 2.),
                            static_cast<int>(size.x),

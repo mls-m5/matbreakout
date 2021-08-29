@@ -43,7 +43,7 @@ struct Particles {
         for (auto &p : particles) {
             auto alpha = static_cast<int>(p.duration / p.maxDuration * 255.);
 
-            renderer.setDrawColor(p.r, p.g, p.b, alpha);
+            renderer.drawColor(p.r, p.g, p.b, alpha);
             renderer.drawPointF(p);
         }
     }

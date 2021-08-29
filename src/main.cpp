@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 
         world.update(world);
 
-        renderer.setDrawColor(0, 30, 0, 255);
+        renderer.drawColor(0, 30, 0, 255);
         renderer.fillRect();
 
         world.draw(renderer);

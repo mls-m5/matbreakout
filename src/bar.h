@@ -8,7 +8,7 @@ struct Bar {
     Vec2f pos{20, 30};
 
     void draw(sdl::Renderer &renderer) {
-        renderer.setDrawColor(100, 100, 100, 255);
+        renderer.drawColor(100, 100, 100, 255);
         renderer.fillRect({static_cast<int>(pos.x - size.x / 2.),
                            static_cast<int>(pos.y - size.y / 2.),
                            static_cast<int>(size.x),

@@ -11,7 +11,7 @@ struct Ball {
     Vec2f dir{1, 1};
 
     void draw(sdl::Renderer &renderer) {
-        renderer.setDrawColor(200, 200, 200, 255);
+        renderer.drawColor(200, 200, 200, 255);
         renderer.fillRect({static_cast<int>(pos.x - size.x / 2.),
                            static_cast<int>(pos.y - size.y / 2.),
                            static_cast<int>(size.x),

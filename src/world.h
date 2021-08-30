@@ -25,7 +25,7 @@ struct World {
     virtual void triggerEvent(Event event) = 0;
 
     // Test ball collision with bricks
-    virtual struct Collision collide(Vec2f p, Vec2f size) = 0;
+    virtual struct Collision collide(Vec2f p, Vec2f halfSize) = 0;
 
     struct ExplosionInfo {
         Vec2f vel;

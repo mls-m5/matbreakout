@@ -26,17 +26,17 @@ struct Brick {
                            static_cast<int>(size.y)});
     }
 
-    bool isInside(Vec2f p, Vec2f s) {
-        if (p.x + s.x > pos.x + halfWidth()) {
+    bool isInside(Vec2f p, Vec2f halfSize) {
+        if (p.x - halfSize.x > pos.x + halfWidth()) {
             return false;
         }
-        if (p.x - s.x < pos.x - halfWidth()) {
+        if (p.x + halfSize.x < pos.x - halfWidth()) {
             return false;
         }
-        if (p.y + s.y > pos.y + halfHeight()) {
+        if (p.y - halfSize.y > pos.y + halfHeight()) {
             return false;
         }
-        if (p.y - s.y < pos.y - halfHeight()) {
+        if (p.y + halfSize.y < pos.y - halfHeight()) {
             return false;
         }
         return true;

@@ -19,7 +19,7 @@ struct WorldImpl : public World {
 
         bar.pos.y = height - bar.size.y * 2;
 
-        balls.emplace_back();
+        balls.emplace_back().pos.y = height - 20 - 1;
 
         int maxX = width / Brick::brickSize.x;
 
@@ -87,9 +87,9 @@ struct WorldImpl : public World {
         }
     }
 
-    Collision collide(Vec2f p, Vec2f size) override {
+    Collision collide(Vec2f p, Vec2f halfSize) override {
         for (auto &b : bricks) {
-            if (b.isInside(p, size)) {
+            if (b.isInside(p, halfSize)) {
                 auto normal = toNormal(b.getCollisionPart(p));
                 return {
                     .isCollision = true,

@@ -5,10 +5,10 @@
 #include "world.h"
 
 struct Ball {
-    Vec2f size{2, 2};
+    Vec2f size{6, 6};
     Vec2f pos{20, 30};
 
-    Vec2f dir{1, 1};
+    Vec2f dir{1, -1};
 
     void draw(sdl::Renderer &renderer) {
         renderer.drawColor(200, 200, 200, 255);
@@ -20,6 +20,9 @@ struct Ball {
 
     void update(World &world) {
         pos += dir;
+
+        dir = dir / dir.abs();
+        dir *= 2;
 
         if (pos.x > world.width) {
             dir.x = -std::abs(dir.x);
@@ -45,7 +48,7 @@ struct Ball {
 
         world.addParticle(pos);
 
-        if (auto c = world.collide(pos, size)) {
+        if (auto c = world.collide(pos, size / 2.)) {
             c.brick->dead = true;
 
             if (std::abs(c.normal.y) > std::abs(c.normal.x)) {

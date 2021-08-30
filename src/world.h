@@ -6,6 +6,7 @@
 struct World {
     enum EventNum {
         HitBar,
+        BallOutside,
     };
 
     struct Event {

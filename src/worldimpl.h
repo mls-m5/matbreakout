@@ -19,7 +19,7 @@ struct WorldImpl : public World {
 
         bar.pos.y = height - bar.size.y * 2;
 
-        balls.emplace_back().pos.y = height - 20 - 1;
+        restartLife();
 
         int maxX = width / Brick::brickSize.x;
 
@@ -29,6 +29,10 @@ struct WorldImpl : public World {
                                         y * Brick::brickSize.y + 40}});
             }
         }
+    }
+
+    void restartLife() {
+        balls.emplace_back().pos.y = height - 11;
     }
 
     void update(World &world) {
@@ -75,8 +79,22 @@ struct WorldImpl : public World {
         return bar.isInside(p);
     }
 
+    void destroyBalls() {
+        for (auto &b : balls) {
+            auto ex = World::ExplosionInfo{};
+
+            ex.power = 2;
+            ex.spread = 4;
+
+            explosion(b.pos, ex);
+        }
+
+        balls.clear();
+    }
+
     void triggerEvent(Event event) override {
-        if (event.num == World::HitBar) {
+        switch (event.num) {
+        case World::HitBar: {
             constexpr int num = 40;
             for (int i = -num; i < num; ++i) {
                 addParticle(
@@ -84,6 +102,12 @@ struct WorldImpl : public World {
                      bar.pos.y},
                     {0, -.1});
             }
+            break;
+        }
+        case World::BallOutside: {
+            destroyBalls();
+            break;
+        }
         }
     }
 

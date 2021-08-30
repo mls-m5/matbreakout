@@ -36,6 +36,7 @@ struct Ball {
         }
         else if (pos.y > world.height) {
             dir.y = -std::abs(dir.y);
+            world.triggerEvent({World::BallOutside, pos});
         }
 
         if (dir.y > 0 && world.isInsideBar(pos)) {
